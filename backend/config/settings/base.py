@@ -15,7 +15,7 @@ SECRET_KEY = os.getenv(
     "django-insecure-skillmatch-ai-secret-key-change-in-production",
 )
 
-DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "t")
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -23,6 +23,7 @@ ALLOWED_HOSTS = [
         "ALLOWED_HOSTS",
         "localhost,127.0.0.1,.onrender.com",
     ).split(",")
+    if host.strip()
 ]
 
 # -----------------------------------------------------------------------------
@@ -241,8 +242,7 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.getenv(
-        "CORS_ALLOWED_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173",
+        "CORS_ALLOWED_ORIGINS", ""
     ).split(",")
     if origin.strip()
 ]
