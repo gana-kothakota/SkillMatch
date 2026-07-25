@@ -19,6 +19,27 @@ class ResumeDetailView(APIView):
         except Resume.DoesNotExist:
             return Response({'message': 'No resume uploaded yet'}, status=status.HTTP_404_NOT_FOUND)
 
+    def patch(self, request):
+        try:
+            resume = request.user.resume
+            skills = request.data.get('extracted_skills')
+            if isinstance(skills, list):
+                # Clean and deduplicate skills preserving case order
+                cleaned = []
+                seen = set()
+                for s in skills:
+                    skill_str = str(s).strip()
+                    if skill_str and skill_str.lower() not in seen:
+                        seen.add(skill_str.lower())
+                        cleaned.append(skill_str)
+                resume.extracted_skills = cleaned
+                resume.save()
+                serializer = ResumeSerializer(resume, context={'request': request})
+                return Response(serializer.data)
+            return Response({'error': 'extracted_skills must be a list of strings'}, status=status.HTTP_400_BAD_REQUEST)
+        except Resume.DoesNotExist:
+            return Response({'error': 'No resume found to update'}, status=status.HTTP_404_NOT_FOUND)
+
     def delete(self, request):
         try:
             resume = request.user.resume

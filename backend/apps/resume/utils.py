@@ -14,8 +14,8 @@ except ImportError:
 
 SKILL_DEFINITIONS = {
     'Python': ['python', 'py'],
-    'Django': ['django'],
-    'React': ['react', 'react.js', 'reactjs'],
+    'Django': ['django', 'django framework', 'drf'],
+    'React': ['react', 'react.js', 'reactjs', 'react native'],
     'JavaScript': ['javascript', 'js', 'ecmascript'],
     'TypeScript': ['typescript', 'ts'],
     'HTML': ['html', 'html5'],
@@ -86,27 +86,36 @@ def fallback_extract_text_from_pdf(file_obj):
 def extract_text_and_skills_from_pdf(file_obj):
     raw_text = ""
 
-    if hasattr(file_obj, 'seek'):
-        file_obj.seek(0)
+    try:
+        if hasattr(file_obj, 'seek'):
+            file_obj.seek(0)
+        file_bytes = file_obj.read() if hasattr(file_obj, 'read') else file_obj
+        if hasattr(file_obj, 'seek'):
+            file_obj.seek(0)
 
-    if pypdf_module is not None:
-        try:
-            pdf_reader = pypdf_module.PdfReader(file_obj)
-            for page in pdf_reader.pages:
-                text = page.extract_text()
-                if text:
-                    raw_text += text + "\n"
-        except Exception as e:
-            print(f"pypdf reader error: {e}")
-            raw_text = fallback_extract_text_from_pdf(file_obj)
-    else:
-        raw_text = fallback_extract_text_from_pdf(file_obj)
-
-    if hasattr(file_obj, 'seek'):
-        file_obj.seek(0)
+        if pypdf_module is not None and isinstance(file_bytes, bytes) and len(file_bytes) > 0:
+            try:
+                stream = io.BytesIO(file_bytes)
+                pdf_reader = pypdf_module.PdfReader(stream)
+                if getattr(pdf_reader, 'is_encrypted', False):
+                    try:
+                        pdf_reader.decrypt('')
+                    except Exception:
+                        pass
+                for page in pdf_reader.pages:
+                    text = page.extract_text()
+                    if text:
+                        raw_text += text + "\n"
+            except Exception as e:
+                print(f"pypdf extraction error: {e}")
+    except Exception as general_err:
+        print(f"File reading error: {general_err}")
 
     if not raw_text.strip():
-        raw_text = "Resume document processed."
+        raw_text = fallback_extract_text_from_pdf(file_obj)
+
+    if not raw_text.strip():
+        raw_text = "Resume document uploaded successfully."
 
     extracted_skills = []
     text_lower = raw_text.lower()

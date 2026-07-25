@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Upload, Trash2, Download, Sparkles, CheckCircle2 } from 'lucide-react';
+import { FileText, Upload, Trash2, Download, Sparkles, Plus, X } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -7,6 +7,8 @@ const ResumeManager = () => {
   const [resume, setResume] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [newSkillInput, setNewSkillInput] = useState('');
+  const [updatingSkills, setUpdatingSkills] = useState(false);
 
   const fetchResume = async () => {
     setLoading(true);
@@ -61,6 +63,42 @@ const ResumeManager = () => {
     }
   };
 
+  const updateSkillsOnServer = async (updatedSkills) => {
+    setUpdatingSkills(true);
+    try {
+      const res = await api.patch('/resumes/me/', { extracted_skills: updatedSkills });
+      setResume(res.data);
+      toast.success('Skills list updated successfully!');
+    } catch (err) {
+      toast.error('Failed to update skills list.');
+    } finally {
+      setUpdatingSkills(false);
+    }
+  };
+
+  const handleAddSkill = async (e) => {
+    e.preventDefault();
+    const skillName = newSkillInput.trim();
+    if (!skillName) return;
+
+    const currentSkills = resume?.extracted_skills || [];
+    if (currentSkills.some((s) => s.toLowerCase() === skillName.toLowerCase())) {
+      toast.error('Skill already present in your list.');
+      setNewSkillInput('');
+      return;
+    }
+
+    const updated = [...currentSkills, skillName];
+    setNewSkillInput('');
+    await updateSkillsOnServer(updated);
+  };
+
+  const handleRemoveSkill = async (skillToRemove) => {
+    const currentSkills = resume?.extracted_skills || [];
+    const updated = currentSkills.filter((s) => s !== skillToRemove);
+    await updateSkillsOnServer(updated);
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       <div>
@@ -109,26 +147,60 @@ const ResumeManager = () => {
               </div>
 
               {/* Extracted Technical Skills */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-sky-400 flex items-center">
-                  <Sparkles className="w-4 h-4 mr-1.5" /> AI Extracted Technical Competencies ({resume.extracted_skills?.length || 0})
-                </h4>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-sky-400 flex items-center">
+                    <Sparkles className="w-4 h-4 mr-1.5" /> Technical Competencies ({resume.extracted_skills?.length || 0})
+                  </h4>
+                  {updatingSkills && (
+                    <span className="text-xs text-indigo-500 animate-pulse font-medium">Saving skills...</span>
+                  )}
+                </div>
+
+                {/* Skills Tag Cloud */}
                 {resume.extracted_skills && resume.extracted_skills.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {resume.extracted_skills.map((skill) => (
                       <span
                         key={skill}
-                        className="px-3 py-1 rounded-xl bg-indigo-50 text-indigo-700 dark:bg-slate-800 dark:text-sky-300 text-xs font-semibold border border-indigo-100 dark:border-slate-700"
+                        className="inline-flex items-center px-3 py-1 rounded-xl bg-indigo-50 text-indigo-700 dark:bg-slate-800 dark:text-sky-300 text-xs font-semibold border border-indigo-100 dark:border-slate-700 group transition-all"
                       >
                         {skill}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSkill(skill)}
+                          className="ml-1.5 p-0.5 rounded-md hover:bg-rose-200 dark:hover:bg-rose-900/60 text-slate-400 hover:text-rose-600 transition-colors"
+                          title={`Remove ${skill}`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
                       </span>
                     ))}
                   </div>
                 ) : (
                   <p className="text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-950/40 p-3 rounded-xl border border-amber-200 dark:border-amber-800/50">
-                    No standard technical skills detected in this PDF. Re-upload a text-based PDF containing skills (e.g. Python, React, AWS, Docker).
+                    No skills automatically detected from this PDF. Type skills below to manually add them to your profile.
                   </p>
                 )}
+
+                {/* Add Manual Skill Form */}
+                <form onSubmit={handleAddSkill} className="flex items-center gap-2 pt-2">
+                  <input
+                    type="text"
+                    value={newSkillInput}
+                    onChange={(e) => setNewSkillInput(e.target.value)}
+                    placeholder="Add a technical skill (e.g. Python, Docker, React)..."
+                    className="flex-1 px-4 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    disabled={updatingSkills}
+                  />
+                  <button
+                    type="submit"
+                    disabled={updatingSkills || !newSkillInput.trim()}
+                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold text-xs flex items-center shadow-sm shadow-indigo-600/20"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" /> Add Skill
+                  </button>
+                </form>
               </div>
 
               {/* Raw Parsed Text Snippet */}
