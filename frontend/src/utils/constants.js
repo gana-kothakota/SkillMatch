@@ -1,4 +1,12 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const rawApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+
+export const API_BASE_URL = rawApiUrl
+  ? (rawApiUrl.endsWith('/api/v1')
+      ? rawApiUrl
+      : rawApiUrl.endsWith('/api')
+        ? `${rawApiUrl}/v1`
+        : `${rawApiUrl.replace(/\/$/, '')}/api/v1`)
+  : '/api/v1';
 
 export const JOB_TYPES = [
   { value: 'FULL_TIME', label: 'Full Time' },
