@@ -75,9 +75,9 @@ INSTALLED_APPS = [
 # -----------------------------------------------------------------------------
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -234,7 +234,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 # -----------------------------------------------------------------------------
-# CORS
+# CORS & CSRF
 # -----------------------------------------------------------------------------
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
@@ -247,6 +247,12 @@ CORS_ALLOWED_ORIGINS = [
     if origin.strip()
 ]
 
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.vercel\.app$",
+    r"^http://localhost:\d+$",
+    r"^http://127\.0\.0\.1:\d+$",
+]
+
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
@@ -256,7 +262,13 @@ CSRF_TRUSTED_ORIGINS = [
         os.getenv("CORS_ALLOWED_ORIGINS", ""),
     ).split(",")
     if origin.strip()
+] + [
+    "https://*.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # -----------------------------------------------------------------------------
 # Production Security
@@ -269,7 +281,6 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = "DENY"
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # -----------------------------------------------------------------------------
 # Logging
