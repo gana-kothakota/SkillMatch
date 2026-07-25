@@ -113,16 +113,22 @@ const ResumeManager = () => {
                 <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-sky-400 flex items-center">
                   <Sparkles className="w-4 h-4 mr-1.5" /> AI Extracted Technical Competencies ({resume.extracted_skills?.length || 0})
                 </h4>
-                <div className="flex flex-wrap gap-2">
-                  {resume.extracted_skills?.map((skill) => (
-                    <span
-                      key={skill}
-                      className="px-3 py-1 rounded-xl bg-indigo-50 text-indigo-700 dark:bg-slate-800 dark:text-sky-300 text-xs font-semibold border border-indigo-100 dark:border-slate-700"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+                {resume.extracted_skills && resume.extracted_skills.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {resume.extracted_skills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="px-3 py-1 rounded-xl bg-indigo-50 text-indigo-700 dark:bg-slate-800 dark:text-sky-300 text-xs font-semibold border border-indigo-100 dark:border-slate-700"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-950/40 p-3 rounded-xl border border-amber-200 dark:border-amber-800/50">
+                    No standard technical skills detected in this PDF. Re-upload a text-based PDF containing skills (e.g. Python, React, AWS, Docker).
+                  </p>
+                )}
               </div>
 
               {/* Raw Parsed Text Snippet */}

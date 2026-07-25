@@ -36,3 +36,18 @@ class ResumeTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['file_name'], 'test_resume.pdf')
         self.assertIn('Python', response.data['extracted_skills'])
+
+    def test_skill_extraction_utility(self):
+        from apps.resume.utils import extract_text_and_skills_from_pdf, SKILL_DEFINITIONS
+        import io
+
+        dummy_text = "Experienced Developer skilled in Python, Django, React.js, C++, .NET, and AWS Cloud."
+        dummy_file = io.BytesIO(dummy_text.encode('utf-8'))
+
+        raw_text, skills = extract_text_and_skills_from_pdf(dummy_file)
+        self.assertIn('Python', skills)
+        self.assertIn('Django', skills)
+        self.assertIn('React', skills)
+        self.assertIn('C++', skills)
+        self.assertIn('.NET', skills)
+        self.assertIn('AWS', skills)

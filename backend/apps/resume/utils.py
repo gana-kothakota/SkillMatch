@@ -12,36 +12,83 @@ except ImportError:
     except ImportError:
         pypdf_module = None
 
-COMMON_TECH_SKILLS = [
-    'Python', 'Django', 'React', 'React.js', 'JavaScript', 'TypeScript',
-    'HTML', 'CSS', 'Tailwind CSS', 'Tailwind', 'Bootstrap', 'Node.js', 'Express',
-    'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Docker', 'Kubernetes', 'AWS',
-    'GCP', 'Azure', 'Git', 'GitHub', 'CI/CD', 'REST API', 'GraphQL', 'Redux',
-    'Next.js', 'Vue.js', 'Angular', 'Java', 'Spring Boot', 'C++', 'C#', '.NET',
-    'PHP', 'Laravel', 'FastAPI', 'Flask', 'Pandas', 'NumPy', 'Machine Learning',
-    'Data Science', 'PyTorch', 'TensorFlow', 'Figma', 'UI/UX', 'Agile', 'Scrum'
-]
+SKILL_DEFINITIONS = {
+    'Python': ['python', 'py'],
+    'Django': ['django'],
+    'React': ['react', 'react.js', 'reactjs'],
+    'JavaScript': ['javascript', 'js', 'ecmascript'],
+    'TypeScript': ['typescript', 'ts'],
+    'HTML': ['html', 'html5'],
+    'CSS': ['css', 'css3'],
+    'Tailwind CSS': ['tailwind', 'tailwindcss', 'tailwind css'],
+    'Bootstrap': ['bootstrap', 'bootstrap5'],
+    'Node.js': ['node', 'node.js', 'nodejs'],
+    'Express': ['express', 'expressjs', 'express.js'],
+    'PostgreSQL': ['postgresql', 'postgres', 'psql', 'postgresdb'],
+    'MySQL': ['mysql'],
+    'MongoDB': ['mongodb', 'mongo'],
+    'Redis': ['redis'],
+    'Docker': ['docker'],
+    'Kubernetes': ['kubernetes', 'k8s'],
+    'AWS': ['aws', 'amazon web services', 'amazon aws'],
+    'GCP': ['gcp', 'google cloud', 'google cloud platform'],
+    'Azure': ['azure'],
+    'Git': ['git'],
+    'GitHub': ['github'],
+    'CI/CD': ['ci/cd', 'cicd', 'continuous integration', 'continuous deployment'],
+    'REST API': ['rest api', 'restful api', 'rest apis', 'restful', 'rest'],
+    'GraphQL': ['graphql'],
+    'Redux': ['redux', 'redux toolkit'],
+    'Next.js': ['next', 'next.js', 'nextjs'],
+    'Vue.js': ['vue', 'vue.js', 'vuejs'],
+    'Angular': ['angular', 'angularjs'],
+    'Java': ['java'],
+    'Spring Boot': ['spring boot', 'springboot', 'spring'],
+    'C++': ['c++', 'cpp'],
+    'C#': ['c#', 'csharp', 'c sharp'],
+    '.NET': ['.net', 'dotnet', 'asp.net'],
+    'PHP': ['php'],
+    'Laravel': ['laravel'],
+    'FastAPI': ['fastapi', 'fast api'],
+    'Flask': ['flask'],
+    'Pandas': ['pandas'],
+    'NumPy': ['numpy'],
+    'Machine Learning': ['machine learning', 'ml'],
+    'Data Science': ['data science'],
+    'PyTorch': ['pytorch'],
+    'TensorFlow': ['tensorflow', 'tf'],
+    'Figma': ['figma'],
+    'UI/UX': ['ui/ux', 'ui/ux design', 'user interface', 'user experience'],
+    'Agile': ['agile'],
+    'Scrum': ['scrum'],
+    'SQL': ['sql'],
+    'Linux': ['linux', 'ubuntu', 'bash', 'shell'],
+}
+
 
 def fallback_extract_text_from_pdf(file_obj):
     """Fallback text extractor if PyPDF2/pypdf reader module fails."""
     try:
-        if hasattr(file_obj, 'read'):
-            content = file_obj.read()
+        if hasattr(file_obj, 'seek'):
             file_obj.seek(0)
-        else:
-            content = file_obj
+        content = file_obj.read() if hasattr(file_obj, 'read') else file_obj
+        if hasattr(file_obj, 'seek'):
+            file_obj.seek(0)
 
         if isinstance(content, bytes):
-            # Extract plain text characters from PDF stream
             text_parts = re.findall(rb'[a-zA-Z0-9\s\.\,\#\+\-\_\@]{3,}', content)
             return " ".join([p.decode('utf-8', errors='ignore') for p in text_parts])
     except Exception as e:
         print(f"Fallback extraction error: {e}")
     return ""
 
+
 def extract_text_and_skills_from_pdf(file_obj):
     raw_text = ""
-    
+
+    if hasattr(file_obj, 'seek'):
+        file_obj.seek(0)
+
     if pypdf_module is not None:
         try:
             pdf_reader = pypdf_module.PdfReader(file_obj)
@@ -55,15 +102,21 @@ def extract_text_and_skills_from_pdf(file_obj):
     else:
         raw_text = fallback_extract_text_from_pdf(file_obj)
 
+    if hasattr(file_obj, 'seek'):
+        file_obj.seek(0)
+
     if not raw_text.strip():
         raw_text = "Resume document processed."
 
     extracted_skills = []
     text_lower = raw_text.lower()
 
-    for skill in COMMON_TECH_SKILLS:
-        pattern = r'\b' + re.escape(skill.lower()) + r'\b'
-        if re.search(pattern, text_lower):
-            extracted_skills.append(skill)
+    for canonical_name, aliases in SKILL_DEFINITIONS.items():
+        for alias in aliases:
+            pattern = r'(?<![a-zA-Z0-9])' + re.escape(alias.lower()) + r'(?![a-zA-Z0-9])'
+            if re.search(pattern, text_lower):
+                if canonical_name not in extracted_skills:
+                    extracted_skills.append(canonical_name)
+                break
 
-    return raw_text, extracted_skills
+    return raw_text.strip(), extracted_skills
