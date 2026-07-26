@@ -14,61 +14,73 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.NOTICE('Seeding database with demo data...'))
 
+        def get_or_create_demo_user(email, username, password, role, is_staff=False, is_superuser=False, **extra_fields):
+            user = User.objects.filter(email=email).first() or User.objects.filter(username=username).first()
+            if not user:
+                user = User.objects.create_user(
+                    email=email,
+                    username=username,
+                    password=password,
+                    role=role,
+                    is_staff=is_staff,
+                    is_superuser=is_superuser,
+                    **extra_fields
+                )
+            else:
+                user.email = email
+                user.username = username
+                user.role = role
+                user.is_staff = is_staff
+                user.is_superuser = is_superuser
+                for key, val in extra_fields.items():
+                    setattr(user, key, val)
+                user.set_password(password)
+                user.save()
+            return user
+
         # Create Admin
-        admin, _ = User.objects.get_or_create(
+        admin = get_or_create_demo_user(
             email='admin@skillmatch.ai',
-            defaults={
-                'username': 'admin',
-                'role': User.Role.ADMIN,
-                'is_staff': True,
-                'is_superuser': True,
-                'is_verified': True,
-                'bio': 'System Administrator'
-            }
+            username='admin',
+            password='Admin123!',
+            role=User.Role.ADMIN,
+            is_staff=True,
+            is_superuser=True,
+            is_verified=True,
+            bio='System Administrator'
         )
-        admin.set_password('Admin123!')
-        admin.save()
 
         # Create Recruiter 1
-        recruiter1, _ = User.objects.get_or_create(
+        recruiter1 = get_or_create_demo_user(
             email='recruiter@techcorp.com',
-            defaults={
-                'username': 'tech_recruiter',
-                'role': User.Role.RECRUITER,
-                'is_verified': True,
-                'bio': 'Senior Talent Acquisition Lead at TechCorp'
-            }
+            username='tech_recruiter',
+            password='Recruiter123!',
+            role=User.Role.RECRUITER,
+            is_verified=True,
+            bio='Senior Talent Acquisition Lead at TechCorp'
         )
-        recruiter1.set_password('Recruiter123!')
-        recruiter1.save()
 
         # Create Recruiter 2
-        recruiter2, _ = User.objects.get_or_create(
+        recruiter2 = get_or_create_demo_user(
             email='recruiter@innovate.io',
-            defaults={
-                'username': 'innovate_recruiter',
-                'role': User.Role.RECRUITER,
-                'is_verified': True,
-                'bio': 'Head of Engineering Hiring at Innovate.io'
-            }
+            username='innovate_recruiter',
+            password='Recruiter123!',
+            role=User.Role.RECRUITER,
+            is_verified=True,
+            bio='Head of Engineering Hiring at Innovate.io'
         )
-        recruiter2.set_password('Recruiter123!')
-        recruiter2.save()
 
         # Create Applicant
-        applicant, _ = User.objects.get_or_create(
+        applicant = get_or_create_demo_user(
             email='applicant@gmail.com',
-            defaults={
-                'username': 'alex_dev',
-                'first_name': 'Alex',
-                'last_name': 'Morgan',
-                'role': User.Role.APPLICANT,
-                'is_verified': True,
-                'bio': 'Full-Stack Software Engineer with 3+ years experience in React, Python, Django, and PostgreSQL.'
-            }
+            username='alex_dev',
+            password='Applicant123!',
+            role=User.Role.APPLICANT,
+            first_name='Alex',
+            last_name='Morgan',
+            is_verified=True,
+            bio='Full-Stack Software Engineer with 3+ years experience in React, Python, Django, and PostgreSQL.'
         )
-        applicant.set_password('Applicant123!')
-        applicant.save()
 
         # Create Companies
         company1, _ = Company.objects.get_or_create(

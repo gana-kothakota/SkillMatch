@@ -83,13 +83,19 @@ python manage.py runserver
 - **PBKDF2 SHA-256 Password Hashing**: All candidate & recruiter passwords are salt-hashed using Django's enterprise PBKDF2 Password Hasher before database persistence.
 - **JWT Token Refresh Rotation**: Short-lived Access Tokens with blacklisted Refresh Tokens.
 
-### 2. Frontend Setup
+### Creating Admin / Superuser Accounts
+Superuser and Admin accounts cannot be registered directly via public API endpoint for security reasons. Use one of the CLI management commands below:
+
 ```bash
-cd frontend
-npm install
-npm run dev
+# Option A: Create default Superuser / Admin account (or seed demo data)
+python manage.py create_admin
+
+# Option B: Create custom Admin account with custom credentials
+python manage.py create_admin --email admin@skillmatch.ai --username admin --password Admin123!
+
+# Option C: Standard Django createsuperuser prompt
+python manage.py createsuperuser
 ```
-Open `http://localhost:5173` in your browser.
 
 ---
 
@@ -112,7 +118,7 @@ npm run build
 ## 📄 License
 MIT License. Built for portfolio & enterprise engineering demonstration.
 
-## users credentials
-Applicant	        :applicant@gmail.com	Applicant123
-Recruiter	        :recruiter@techcorp.com	Recruiter123!	
-Admin	            :admin@skillmatch.ai	Admin123!
+## Demo Accounts & Credentials
+- **Applicant**: `applicant@gmail.com` / `Applicant123!`
+- **Recruiter**: `recruiter@techcorp.com` / `Recruiter123!`
+- **Admin**: `admin@skillmatch.ai` / `Admin123!`

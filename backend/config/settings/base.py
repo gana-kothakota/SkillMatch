@@ -36,10 +36,16 @@ if DEBUG:
     LOGS_DIR.mkdir(exist_ok=True)
 
 # -----------------------------------------------------------------------------
-# Custom User
+# Custom User & Authentication Backends
 # -----------------------------------------------------------------------------
 
 AUTH_USER_MODEL = "accounts.User"
+
+AUTHENTICATION_BACKENDS = [
+    "apps.accounts.backends.EmailOrUsernameModelBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
 
 # -----------------------------------------------------------------------------
 # Installed Apps
