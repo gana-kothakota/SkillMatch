@@ -19,6 +19,7 @@ import Register from './pages/public/Register';
 
 import ApplicantDashboard from './pages/applicant/ApplicantDashboard';
 import ResumeManager from './pages/applicant/ResumeManager';
+import SavedJobs from './pages/applicant/SavedJobs';
 import RecruiterDashboard from './pages/recruiter/RecruiterDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 
@@ -61,7 +62,7 @@ function App() {
                     path="/applicant/saved"
                     element={
                       <ProtectedRoute allowedRoles={['APPLICANT']}>
-                        <Jobs />
+                        <SavedJobs />
                       </ProtectedRoute>
                     }
                   />

@@ -69,14 +69,14 @@ const ApplicantDashboard = () => {
           </div>
         </div>
 
-        <div className="glass-card p-6 rounded-2xl space-y-1">
+        <Link to="/applicant/saved" className="glass-card p-6 rounded-2xl space-y-1 hover:border-amber-400/60 transition-all group">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center">
-            <Bookmark className="w-4 h-4 mr-1.5 text-amber-500" /> Saved Roles
+            <Bookmark className="w-4 h-4 mr-1.5 text-amber-500 fill-amber-500/20" /> Saved Roles
           </div>
-          <div className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">
+          <div className="text-3xl font-extrabold text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform">
             {analytics?.saved_jobs_count || 0}
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Application Timeline Tracking */}

@@ -10,13 +10,19 @@
     color-scheme: dark;
   }
   body {
-    font-family: 'Outfit', 'Poppins', sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 400;
     background-color: #f8fafc;
     color: #0f172a;
   }
   html.dark body {
     background-color: #0f172a;
     color: #f8fafc;
+  }
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.015em;
   }
 }
 

@@ -18,7 +18,27 @@ const JobDetails = () => {
   // Apply Modal state
   const [isApplyOpen, setIsApplyOpen] = useState(false);
   const [coverLetter, setCoverLetter] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [hasResume, setHasResume] = useState(true);
+  const [checkingResume, setCheckingResume] = useState(false);
+  const [generatingCoverLetter, setGeneratingCoverLetter] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const handleGenerateAICoverLetter = async () => {
+    setGeneratingCoverLetter(true);
+    try {
+      const res = await api.post('/applications/generate-cover-letter/', { job_id: job.id });
+      if (res.data && res.data.cover_letter) {
+        setCoverLetter(res.data.cover_letter);
+        toast.success('AI Cover Letter composed!');
+      }
+    } catch (err) {
+      toast.error('Failed to generate AI Cover Letter.');
+    } finally {
+      setGeneratingCoverLetter(false);
+    }
+  };
+
 
   const fetchJobDetails = async () => {
     setLoading(true);
@@ -33,9 +53,39 @@ const JobDetails = () => {
     }
   };
 
+  const checkUserResume = async () => {
+    setCheckingResume(true);
+    try {
+      const res = await api.get('/resumes/me/');
+      if (res.data && res.data.id) {
+        setHasResume(true);
+      } else {
+        setHasResume(false);
+      }
+    } catch (err) {
+      setHasResume(false);
+    } finally {
+      setCheckingResume(false);
+    }
+  };
+
   useEffect(() => {
     fetchJobDetails();
   }, [id]);
+
+  const handleOpenApplyModal = () => {
+    if (!user) {
+      toast.error('Please log in to submit an application.');
+      navigate('/login');
+      return;
+    }
+    if (user.role !== 'APPLICANT') {
+      toast.error('Only Job Candidates can apply for jobs.');
+      return;
+    }
+    checkUserResume();
+    setIsApplyOpen(true);
+  };
 
   const handleApply = async (e) => {
     e.preventDefault();
@@ -45,22 +95,33 @@ const JobDetails = () => {
       return;
     }
 
+    if (!coverLetter.trim()) {
+      toast.error('Please enter a cover letter / note to the recruiter.');
+      return;
+    }
+
+    if (!hasResume) {
+      toast.error('Please upload your resume PDF before applying.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       await api.post('/applications/', {
         job: job.id,
-        cover_letter: coverLetter,
+        cover_letter: coverLetter.trim(),
       });
       toast.success('Application submitted successfully!');
       setIsApplyOpen(false);
       fetchJobDetails(); // Refresh application status
     } catch (err) {
-      const msg = err.response?.data?.error || 'Failed to submit application.';
+      const msg = err.response?.data?.error || err.response?.data?.message || 'Failed to submit application.';
       toast.error(msg);
     } finally {
       setSubmitting(false);
     }
   };
+
 
   if (loading) {
     return (
@@ -105,7 +166,7 @@ const JobDetails = () => {
               </span>
             ) : (
               <button
-                onClick={() => setIsApplyOpen(true)}
+                onClick={handleOpenApplyModal}
                 className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 hover:from-indigo-500 hover:to-sky-400 text-white font-bold shadow-lg shadow-indigo-500/25 transition-all flex items-center space-x-2"
               >
                 <Send className="w-4 h-4" />
@@ -203,38 +264,72 @@ const JobDetails = () => {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6">
             <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">Submit Job Application</h3>
-              <button onClick={() => setIsApplyOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+              <button onClick={() => setIsApplyOpen(false)} className="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
             </div>
 
             <form onSubmit={handleApply} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                  Cover Letter / Note to Recruiter
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Cover Letter / Note to Recruiter <span className="text-rose-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateAICoverLetter}
+                    disabled={generatingCoverLetter}
+                    className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-sky-400 hover:bg-indigo-100 text-[11px] font-bold flex items-center shadow-xs border border-indigo-200/50 dark:border-slate-700 transition-all disabled:opacity-50"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 mr-1 text-indigo-500" />
+                    <span>{generatingCoverLetter ? 'Writing AI Cover Letter...' : 'Auto-Write with AI'}</span>
+                  </button>
+                </div>
                 <textarea
-                  rows={4}
-                  placeholder="Introduce yourself and explain why you're a great fit for this position..."
+                  rows={5}
+                  required
+                  placeholder="Introduce yourself or tap 'Auto-Write with AI' above to compose a customized letter..."
                   value={coverLetter}
                   onChange={(e) => setCoverLetter(e.target.value)}
-                  className="w-full p-3 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-3 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium leading-relaxed"
                 />
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-between text-xs">
-                <span className="flex items-center text-slate-600 dark:text-slate-300 font-medium">
-                  <FileText className="w-4 h-4 mr-2 text-indigo-500" /> Active Resume PDF attached
-                </span>
-                <Link to="/applicant/resume" className="text-indigo-600 dark:text-sky-400 font-semibold hover:underline">
-                  Manage Resume
-                </Link>
-              </div>
+              {/* Resume Check Notice */}
+              {checkingResume ? (
+                <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs text-slate-500 animate-pulse">
+                  Checking active resume status...
+                </div>
+              ) : hasResume ? (
+                <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between text-xs">
+                  <span className="flex items-center text-emerald-800 dark:text-emerald-300 font-semibold">
+                    <FileText className="w-4 h-4 mr-2 text-emerald-600" /> Active Resume PDF attached
+                  </span>
+                  <Link to="/applicant/resume" className="text-indigo-600 dark:text-sky-400 font-bold hover:underline">
+                    Manage Resume
+                  </Link>
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 space-y-2 text-xs">
+                  <div className="flex items-center text-amber-800 dark:text-amber-300 font-bold">
+                    <AlertCircle className="w-4 h-4 mr-2 text-amber-600" /> No Resume Found
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-400">
+                    You must upload a PDF resume before submitting an application.
+                  </p>
+                  <Link
+                    to="/applicant/resume"
+                    className="inline-block px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs"
+                  >
+                    Upload Resume PDF Now
+                  </Link>
+                </div>
+              )}
 
               <button
                 type="submit"
-                disabled={submitting}
-                className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all"
+                disabled={submitting || !hasResume || !coverLetter.trim()}
+                className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all"
               >
-                {submitting ? 'Submitting...' : 'Confirm Application'}
+                {submitting ? 'Submitting Application...' : 'Confirm & Submit Application'}
               </button>
             </form>
           </div>

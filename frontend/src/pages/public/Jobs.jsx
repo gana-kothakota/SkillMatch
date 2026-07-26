@@ -21,6 +21,8 @@ const Jobs = () => {
   const [expLevel, setExpLevel] = useState(searchParams.get('experience_level') || '');
   const [location, setLocation] = useState(searchParams.get('location') || '');
 
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
   const fetchJobs = async () => {
     setLoading(true);
     try {
@@ -64,7 +66,7 @@ const Jobs = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white">Explore Enterprise Opportunities</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Explore Enterprise Opportunities</h1>
         <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
           Filter through live open positions with automated AI match scoring.
         </p>
@@ -90,17 +92,28 @@ const Jobs = () => {
         </div>
       )}
 
+      {/* Mobile Filter Toggle Button */}
+      <div className="lg:hidden">
+        <button
+          onClick={() => setShowMobileFilters(!showMobileFilters)}
+          className="w-full py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-xs flex items-center justify-between border border-slate-200 dark:border-slate-700"
+        >
+          <span className="flex items-center"><Filter className="w-4 h-4 mr-2 text-indigo-500" /> Filter Positions</span>
+          <span className="text-xs text-indigo-600 dark:text-sky-400">{showMobileFilters ? 'Hide' : 'Show'}</span>
+        </button>
+      </div>
+
       {/* Main Layout: Sidebar Filters + Job Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar Filters */}
-        <div className="lg:col-span-1 glass-card p-6 rounded-2xl h-fit space-y-6">
+        <div className={`lg:col-span-1 glass-card p-6 rounded-2xl h-fit space-y-6 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
           <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
             <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center">
               <Filter className="w-4 h-4 mr-2 text-indigo-500" /> Filters
             </h3>
             <button
               onClick={clearFilters}
-              className="text-xs text-indigo-600 dark:text-sky-400 hover:underline"
+              className="text-xs text-indigo-600 dark:text-sky-400 hover:underline font-semibold"
             >
               Reset All
             </button>

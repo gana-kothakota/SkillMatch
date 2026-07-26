@@ -57,6 +57,16 @@ class SavedJobViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(saved_job)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def destroy(self, request, pk=None, *args, **kwargs):
+        # Allow deleting by either SavedJob ID or Job ID
+        saved_job = SavedJob.objects.filter(user=request.user, job_id=pk).first() or \
+                    SavedJob.objects.filter(user=request.user, id=pk).first()
+        if not saved_job:
+            return Response({'error': 'Saved job not found'}, status=status.HTTP_404_NOT_FOUND)
+        saved_job.delete()
+        return Response({'message': 'Job unsaved successfully'}, status=status.HTTP_200_OK)
+
+
 class RecommendedJobsView(APIView):
     permission_classes = [IsAuthenticated, IsApplicant]
 
